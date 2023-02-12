@@ -13,6 +13,7 @@ class TOTPCodeCard extends StatefulWidget {
 
 class _TOTPCodeCardState extends State<TOTPCodeCard> with SingleTickerProviderStateMixin {
   String totpCode = '';
+  final int _totpDuration = 30;
   AnimationController? _controller;
 
   @override
@@ -20,7 +21,7 @@ class _TOTPCodeCardState extends State<TOTPCodeCard> with SingleTickerProviderSt
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 30),
+      duration: Duration(seconds: _totpDuration),
     );
     _getTOTP();
   }
@@ -32,7 +33,8 @@ class _TOTPCodeCardState extends State<TOTPCodeCard> with SingleTickerProviderSt
   }
 
   void _getTOTP() {
-    var oneTimePin = OTP.generateTOTPCode('I53TGMCUK5CW2VTO', DateTime.now().millisecondsSinceEpoch, 'SHA1', 30);
+    final currentTimestamp = DateTime.now().millisecondsSinceEpoch;
+    var oneTimePin = OTP.generateTOTPCode('I53TGMCUK5CW2VTO', currentTimestamp, 'SHA1', 30);
     var oneTimePinLength = oneTimePin.toString().length;
     var numberOfZeroRequired = 6 - oneTimePinLength;
     var oneTimePinStr = oneTimePin.toString();
@@ -50,9 +52,9 @@ class _TOTPCodeCardState extends State<TOTPCodeCard> with SingleTickerProviderSt
     Timer(Duration(seconds: timeUntilNextTOTP), () {
       _getTOTP();
     });
-
     _controller!.reset();
-    _controller!.forward();
+    _controller!.duration = const Duration(seconds: 30);
+    _controller!.forward(from: (30 - timeUntilNextTOTP) / 30);
   }
 
   @override
@@ -74,12 +76,11 @@ class _TOTPCodeCardState extends State<TOTPCodeCard> with SingleTickerProviderSt
                   color: Colors.blue,
                 ),
                 child: Center(
-                    child: Text(
-                  '${30 - (30 * _controller!.value).floor()}',
-                )),
+                  child: Text(
+                    '${30 - (30 * _controller!.value).floor()}',
+                  ),
+                ),
               );
-
-              // 'Time remaining: ${30 - (_controller!.value * 30).floor()}');
             },
           ),
         )
